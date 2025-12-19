@@ -219,5 +219,10 @@ export const pamSessionServiceFactory = ({
     return { session: updatedSession, projectId: project.id };
   };
 
-  return { getById, list, updateLogsById, endSessionById };
+  return {
+    getById,
+    list,
+    updateLogsById,
+    endSessionById
+  };
 };

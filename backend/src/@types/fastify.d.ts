@@ -29,6 +29,9 @@ import { TOidcConfigServiceFactory } from "@app/ee/services/oidc/oidc-config-ser
 import { TPamAccountServiceFactory } from "@app/ee/services/pam-account/pam-account-service";
 import { TPamFolderServiceFactory } from "@app/ee/services/pam-folder/pam-folder-service";
 import { TPamResourceServiceFactory } from "@app/ee/services/pam-resource/pam-resource-service";
+import { PAMSessionConnectionPool } from "@app/ee/services/pam-session/pam-session-connection-pool";
+import { TPamPostgresProxyServiceFactory } from "@app/ee/services/pam-session/pgsql/pam-pgsql-proxy-service";
+import { TPamPostgresTcpGatewayServiceFactory } from "@app/ee/services/pam-session/pgsql/pam-pgsql-tcp-gateway-service";
 import { TPamSessionServiceFactory } from "@app/ee/services/pam-session/pam-session-service";
 import { TPermissionServiceFactory } from "@app/ee/services/permission/permission-service-types";
 import { TPitServiceFactory } from "@app/ee/services/pit/pit-service";
@@ -352,6 +355,9 @@ declare module "fastify" {
       pamResource: TPamResourceServiceFactory;
       pamAccount: TPamAccountServiceFactory;
       pamSession: TPamSessionServiceFactory;
+      pamPostgresProxy: TPamPostgresProxyServiceFactory;
+      pamPostgresTcpGateway: TPamPostgresTcpGatewayServiceFactory;
+      pamConnectionPool: PAMSessionConnectionPool;
       upgradePath: TUpgradePathService;
 
       membershipUser: TMembershipUserServiceFactory;

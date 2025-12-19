@@ -71,8 +71,13 @@ import { pamFolderDALFactory } from "@app/ee/services/pam-folder/pam-folder-dal"
 import { pamFolderServiceFactory } from "@app/ee/services/pam-folder/pam-folder-service";
 import { pamResourceDALFactory } from "@app/ee/services/pam-resource/pam-resource-dal";
 import { pamResourceServiceFactory } from "@app/ee/services/pam-resource/pam-resource-service";
+import { pamConnectionPool } from "@app/ee/services/pam-session/pam-session-connection-pool";
 import { pamSessionDALFactory } from "@app/ee/services/pam-session/pam-session-dal";
 import { pamSessionServiceFactory } from "@app/ee/services/pam-session/pam-session-service";
+import {
+  pamPostgresProxyServiceFactory,
+  pamPostgresTcpGatewayServiceFactory
+} from "@app/ee/services/pam-session/pgsql";
 import { permissionDALFactory } from "@app/ee/services/permission/permission-dal";
 import { permissionServiceFactory } from "@app/ee/services/permission/permission-service";
 import { pitServiceFactory } from "@app/ee/services/pit/pit-service";
@@ -2472,6 +2477,19 @@ export const registerRoutes = async (
     kmsService
   });
 
+  const pamPostgresTcpGatewayService = pamPostgresTcpGatewayServiceFactory({
+    gatewayV2Service
+  });
+
+  const pamPostgresProxyService = pamPostgresProxyServiceFactory({
+    pamSessionDAL,
+    pamAccountDAL,
+    pamResourceDAL,
+    pamAccountService,
+    gatewayV2Service,
+    postgresTcpGatewayService: pamPostgresTcpGatewayService
+  });
+
   const migrationService = externalMigrationServiceFactory({
     externalMigrationQueue,
     userDAL,
@@ -2556,7 +2574,6 @@ export const registerRoutes = async (
   await dynamicSecretQueueService.init();
   await eventBusService.init();
 
-  // inject all services
   server.decorate<FastifyZodProvider["services"]>("services", {
     login: loginService,
     password: passwordService,
@@ -2676,6 +2693,9 @@ export const registerRoutes = async (
     pamResource: pamResourceService,
     pamAccount: pamAccountService,
     pamSession: pamSessionService,
+    pamPostgresProxy: pamPostgresProxyService,
+    pamPostgresTcpGateway: pamPostgresTcpGatewayService,
+    pamConnectionPool,
     upgradePath: upgradePathService,
 
     membershipUser: membershipUserService,
