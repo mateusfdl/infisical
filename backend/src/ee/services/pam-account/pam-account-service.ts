@@ -798,9 +798,8 @@ export const pamAccountServiceFactory = ({
       });
     }
 
-    // To be hit by gateways only
-    if (actor.type !== ActorType.IDENTITY) {
-      throw new ForbiddenRequestError({ message: "Only gateways can perform this action" });
+    if (actor.type !== ActorType.IDENTITY && actor.type !== ActorType.USER) {
+      throw new ForbiddenRequestError({ message: "Only gateways or session owners can perform this action" });
     }
 
     const session = await pamSessionDAL.findById(sessionId);
@@ -808,6 +807,10 @@ export const pamAccountServiceFactory = ({
 
     const project = await projectDAL.findById(session.projectId);
     if (!project) throw new NotFoundError({ message: `Project with ID '${session.projectId}' not found` });
+
+    if (actor.type === ActorType.USER && session.userId !== actor.id) {
+      throw new ForbiddenRequestError({ message: "You can only access credentials for your own sessions" });
+    }
 
     const { permission } = await permissionService.getOrgPermission({
       actor: actor.type,
@@ -818,10 +821,13 @@ export const pamAccountServiceFactory = ({
       scope: OrganizationActionScope.Any
     });
 
-    ForbiddenError.from(permission).throwUnlessCan(
-      OrgPermissionGatewayActions.CreateGateways,
-      OrgPermissionSubjects.Gateway
-    );
+    // For gateways, check gateway permissions
+    if (actor.type === ActorType.IDENTITY) {
+      ForbiddenError.from(permission).throwUnlessCan(
+        OrgPermissionGatewayActions.CreateGateways,
+        OrgPermissionSubjects.Gateway
+      );
+    }
 
     if (!session.accountId) throw new NotFoundError({ message: "Session is missing accountId column" });
 
@@ -836,7 +842,7 @@ export const pamAccountServiceFactory = ({
     const resource = await pamResourceDAL.findById(account.resourceId);
     if (!resource) throw new NotFoundError({ message: `Resource with ID '${account.resourceId}' not found` });
 
-    if (resource.gatewayId && resource.gatewayIdentityId !== actor.id) {
+    if (actor.type === ActorType.IDENTITY && resource.gatewayId && resource.gatewayIdentityId !== actor.id) {
       throw new ForbiddenRequestError({
         message: "Identity does not have access to fetch the PAM session credentials"
       });

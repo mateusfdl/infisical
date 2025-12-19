@@ -42,7 +42,7 @@ export const registerPamSessionRouter = async (server: FastifyZodProvider) => {
         })
       }
     },
-    onRequest: verifyAuth([AuthMode.IDENTITY_ACCESS_TOKEN]),
+    onRequest: verifyAuth([AuthMode.IDENTITY_ACCESS_TOKEN, AuthMode.JWT]),
     handler: async (req) => {
       const { credentials, projectId, account, sessionStarted } =
         await server.services.pamAccount.getSessionCredentials(req.params.sessionId, req.permission);
